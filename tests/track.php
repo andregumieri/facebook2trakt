@@ -1,14 +1,13 @@
 <?php
-	define('API_KEY', '123mudar');
-	$url = 'http://api.trakt.tv/show/episode/seen/' . API_KEY;
-
+	require('../config.php');
+	$url = 'http://api.trakt.tv/show/episode/seen/' . TRAKT_API_KEY;
 
 	//open connection
 	$ch = curl_init();
 
 	$fields = array();
-	$fields['username'] = 'andregumieri';
-	$fields['password'] = sha1('123mudar');
+	$fields['username'] = TRAKT_USERNAME;
+	$fields['password'] = TRAKT_PASSWORD;
 	$fields['title'] = 'Homeland';
 	$fields['year'] = 2011;
 	$fields['episodes'] = array(array(
@@ -22,6 +21,7 @@
 	curl_setopt($ch,CURLOPT_URL, $url);
 	curl_setopt($ch,CURLOPT_POST, 1);
 	curl_setopt($ch,CURLOPT_POSTFIELDS, json_encode($fields));
+	curl_setopt($ch,CURLOPT_RETURNTRANSFER, TRUE);
 
 	//execute post
 	$result = curl_exec($ch);

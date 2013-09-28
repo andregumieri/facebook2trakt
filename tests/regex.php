@@ -1,12 +1,12 @@
 <?php
-	require('phpQuery-onefile.php');
+	require('../libs/phpQuery-onefile.php');
 	
-	$html = file_get_contents("__padrao.html");
-	// $html = file_get_contents("__originais.html"); // $id = 70133673;
-	$html = file_get_contents("__originais2.html"); // $id = 70248291;
+	$html = file_get_contents("padrao.html");
+	// $html = file_get_contents("originais.html"); // $id = 70133673;
+	// $html = file_get_contents("originais2.html"); // $id = 70248291;
 
 phpQuery::newDocumentHTML($html);
-$id = 70248291;
+$id = 70133673;
 //print_r();
 	if(count(pq('div.videoImagery'))>0) {
 		$name = trim(pq("#odp-body h1")->text());
@@ -17,6 +17,7 @@ $id = 70248291;
 		$year = trim(pq("#odp-body>div.ShowInfo>div.moduleContent span.showYear")->text());
 		$year = explode("-", $year);
 		$year = trim($year[0]);
+		$duration = null;
 
 		foreach(pq('div.videoRow') as $video) {
 			$episodeId = pq($video)->children("div.videoImagery")->attr("data-episode-id");
@@ -24,6 +25,13 @@ $id = 70248291;
 				$elTitle = pq($video)->children("div.videoDetails")->children("div.title");
 				$episode = trim($elTitle->children("span.episodeNumber")->text());
 				$title = trim($elTitle->children("span.title-text")->text());
+				$duration = trim(pq($video)->find(".progress-details .episode-length.total-time .time-text")->text());
+				preg_match('!\d+!', $duration, $matches);
+				if(count($matches)>0) {
+					$duration = intval($matches[0]);
+				} else {
+					$duration = null;
+				}
 			}
 		}
 	} else {
@@ -34,6 +42,13 @@ $id = 70248291;
 		$year = trim(pq("#displaypage-overview-details>div.titleArea>span.year")->text());
 		$year = explode("-", $year);
 		$year = trim($year[0]);
+		$duration = pq("#episodeColumn>ul>li.current h3 .duration")->text();
+		preg_match('!\d+!', $duration, $matches);
+		if(count($matches)>0) {
+			$duration = intval($matches[0]);
+		} else {
+			$duration = null;
+		}
 	}
 
 
@@ -42,5 +57,6 @@ $id = 70248291;
 	echo $episode . "\n";
 	echo $title . "\n";
 	echo $year . "\n";
+	echo $duration . "\n";
 	
 ?>
