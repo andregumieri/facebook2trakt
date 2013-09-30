@@ -1,6 +1,6 @@
 facebook2trakt
 ==============
-Pequeno script que faz scrobble para o Trakt à partir das atividades do Facebook
+Pequeno script que faz scrobble para o Trakt à partir das atividades do Facebook (configurado para pegar somente séries do netflix por enquanto)
 
 Uso
 ---
