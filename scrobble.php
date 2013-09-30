@@ -1,7 +1,7 @@
+#!/usr/bin/php
 <?php
 	require('config.php');
 	require('libs/phpQuery-onefile.php');
-
 
 	function pegaURLDoNetflix($address) {
 		$novaURL = null;
@@ -185,7 +185,6 @@
 		$fields['year'] = $episodes[0]['info']->year;
 		$fields['episodes'] = $arrEpisodes;
 
-		print_r($fields); continue;
 
 
 		//set the url, number of POST vars, POST data
@@ -202,6 +201,10 @@
 
 		if(!$result->status || $result->status!='success') {
 			echo "ERRO - " . $episodes[0]['info']->url . "\n";
+			print_r($url);
+			print_r($result);
+			print_r($fiedls);
+			echo "----\n";
 			continue;
 		}
 
