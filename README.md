@@ -4,7 +4,7 @@ Pequeno script que faz scrobble para o Trakt à partir das atividades do Faceboo
 
 Uso
 ---
-1. Levante um servidor HTTP local e crie um link (`ln -s`) para a pasta do repositório
+1. Levante um servidor HTTP local e crie um link (`ln -s`) para a pasta do repositório. Durante a versão beta é obrigatório que seja `http://localhost:8888/seu-diretorio`.
 2. Copie o arquivo `config-sample.php`, salve como `config.php` e edite com suas informações
   1. HTTP_ROOT: URL configurada no item 1
   2. TRAKT_USERNAME: Seu nome de usuário no trakt.com
