@@ -1,7 +1,21 @@
 #!/usr/bin/php
 <?php
+	date_default_timezone_set('America/Sao_Paulo');
 	require('config.php');
 	require('libs/phpQuery-onefile.php');
+	$log = (defined('LOG_PATH') && trim(LOG_PATH)!='');
+	if($log) {
+		$log = LOG_PATH . '/f2t_' . date('Y-m-d_his') . '.txt'; 
+	}
+
+	function do_log($message) {
+		global $log;
+		echo $message."\n";
+
+		if($log) {
+			file_put_contents($log, $message."\n", FILE_APPEND);
+		}
+	}
 
 	function pegaURLDoNetflix($address) {
 		$novaURL = null;
@@ -56,7 +70,7 @@
 					$duration = pq($video)->children(".progress-details")->children(".episode-length.total-time")->children(".time-text");
 					$str = 'In My Cart : 11 12 items';
 					preg_match('!\d+!', $duration, $matches);
-					print_r($matches);
+					//print_r($matches);
 				}
 			}	
 		} else { // Comuns
@@ -88,10 +102,13 @@
 	}
 
 
+	do_log("Iniciado - " . date("d/m/Y H:i:s"));
+
+
 	// Faz a troca do token
-	if(!file_exists('.db_token')) die("Autentique-se em " . HTTP_ROOT . '/autenticar.php');
-	file_get_contents(HTTP_ROOT . '/autenticar.php?fb_exchange_token='.file_get_contents('.db_token'));
-	define('FACEBOOK_TOKEN', file_get_contents('.db_token'));
+	if(!file_exists(__DIR__.'/.db_token')) die("Autentique-se em " . HTTP_ROOT . '/autenticar.php');
+	file_get_contents(HTTP_ROOT . '/autenticar.php?fb_exchange_token='.file_get_contents(__DIR__.'/.db_token'));
+	define('FACEBOOK_TOKEN', file_get_contents(__DIR__.'/.db_token'));
 
 
 	// Pega os primeiros videos
@@ -100,7 +117,7 @@
 
 	// Pega o último ID encontrado
 	$lastId = 0;
-	if(!file_exists('.db_fb_lastid') || !$lastId = intval(file_get_contents(".db_fb_lastid"))) $lastId = 0;
+	if(!file_exists(__DIR__.'/.db_fb_lastid') || !$lastId = intval(file_get_contents(__DIR__."/.db_fb_lastid"))) $lastId = 0;
 
 	// Array dos registros do Facebook
 	$fbData = array();
@@ -116,7 +133,7 @@
 
 			if(isset($video->application->namespace) && $video->application->namespace=='netflix_social' && isset($video->data->episode)) {
 				//echo $video->id . "\n";
-				if($primeiroID) file_put_contents('.db_fb_lastid', $video->id);
+				if($primeiroID) file_put_contents(__DIR__.'/.db_fb_lastid', $video->id);
 				$primeiroID = false;
 
 				$fbData[] = array("id"=>$video->id, "url"=>$video->data->episode->url, "titulo"=>$video->data->episode->title, "last_played"=>$video->publish_time, "movieinfo"=>null, "scrobbled"=>false);
@@ -129,9 +146,9 @@
 	$fbData = json_decode(json_encode($fbData));
 	
 	// Verifica se já existe um arquivo de cache
-	if(file_exists('.db_fb_cache')) {
+	if(file_exists(__DIR__.'/.db_fb_cache')) {
 		$merge_cache = array();
-		$fb_cache = json_decode(file_get_contents('.db_fb_cache'));
+		$fb_cache = json_decode(file_get_contents(__DIR__.'/.db_fb_cache'));
 		if(is_object($fb_cache)) $fb_cache = get_object_vars($fb_cache);
 		if(is_array($fb_cache)) {
 			foreach($fb_cache as $item) {
@@ -200,21 +217,24 @@
 
 
 		if(!$result->status || $result->status!='success') {
-			echo "ERRO - " . $episodes[0]['info']->url . "\n";
-			print_r($url);
-			print_r($result);
-			print_r($fiedls);
-			echo "----\n";
+			do_log("ERRO - " . $episodes[0]['info']->url);
+			do_log(print_r($url, true));
+			do_log(print_r($result, true));
+			do_log(print_r($fiedls, true));
+			do_log('----');
 			continue;
 		}
 
 		foreach($episodes as $episode) {
 			unset($fbData[$episode['idx']]);
 		}
-		echo "Scrobbled " . $episodes[0]['info']->name . "\n";
+		do_log("Scrobbled " . $episodes[0]['info']->name);
 	}
 	
 
 	// Grava o cache modificado
-	file_put_contents(".db_fb_cache", json_encode($fbData));
+	file_put_contents(__DIR__."/.db_fb_cache", json_encode($fbData));
+
+
+	do_log("Finalizado - " . date("d/m/Y H:i:s"));
 ?>
