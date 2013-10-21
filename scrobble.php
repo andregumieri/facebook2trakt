@@ -1,5 +1,19 @@
 #!/usr/bin/php
 <?php
+	define('PID', __DIR__.'/.pid');
+	define('PID_WAIT_TIME', 30);
+
+	/* Verifica se ja tem um processo em andamento */
+	if(file_exists(PID)) {
+		$timepid = file_get_contents(PID);
+		$time_diff = mktime()-$timepid;
+
+		if($time_diff<PID_WAIT_TIME) die("Já existe um processo em andamento. Tente novamente em " . (PID_WAIT_TIME-$time_diff) . " segundos.\n");
+	}
+	file_put_contents(PID, mktime());
+
+
+
 	date_default_timezone_set('America/Sao_Paulo');
 	require('config.php');
 	require('libs/phpQuery-onefile.php');
@@ -167,7 +181,7 @@
 		if(is_null($video->movieinfo)) {
 			$video->movieinfo = json_decode(json_encode(pegaURLDoNetflix($video->url)));
 		}
-		
+	
 		$movieKey = md5($video->movieinfo->name);
 		if(!isset($scrobble[$movieKey])) $scrobble[$movieKey] = array();
 		$scrobble[$movieKey][] = array("idx"=>$idx, "info"=>$video->movieinfo, "last_played"=>$video->last_played);
@@ -183,47 +197,50 @@
 		foreach($episodes as $episode) {
 			$episodeNum = intval($episode['info']->episode);
 			$season = intval($episode['info']->season);
+			$duration = intval($episode['info']->duration);
 			if($episodeNum<1 || $season<1) continue;
 
 			$arrEpisodes[] = array("season"=>$season, "episode"=>$episodeNum, "last_played"=>$episode['last_played']);
+
+			$url = 'http://api.trakt.tv/show/scrobble/' . TRAKT_API_KEY;
+
+			$ch = curl_init();
+
+			$fields = array();
+			$fields['username'] = TRAKT_USERNAME;
+			$fields['password'] = TRAKT_PASSWORD;
+			$fields['title'] = $episodes[0]['info']->name;
+			$fields['year'] = $episodes[0]['info']->year;
+			$fields['season'] = $season;
+			$fields['episode'] = $episodeNum;
+			$fields['duration'] = $duration;
+			$fields['progress'] = 100;
+			$fields['plugin_version'] = '0.1';
+			$fields['media_center_version'] = '0.1';
+			$fields['media_center_version'] = 'Oct 21 2013';
+
+			//set the url, number of POST vars, POST data
+			curl_setopt($ch,CURLOPT_URL, $url);
+			curl_setopt($ch,CURLOPT_POST, 1);
+			curl_setopt($ch,CURLOPT_POSTFIELDS, json_encode($fields));
+			curl_setopt($ch,CURLOPT_RETURNTRANSFER, TRUE);
+
+			//execute post
+			$result = curl_exec($ch);
+			$result = json_decode($result);
+			curl_close($ch);
+
+			if(!$result->status || $result->status!='success') {
+				do_log("ERRO - " . $episode['info']->url);
+				do_log(print_r($url, true));
+				do_log(print_r($result, true));
+				do_log(print_r($fiedls, true));
+				do_log('----');
+				continue;
+			}
 		}
 
 		if(empty($arrEpisodes)) continue;
-
-		// {"status":"success","message":"1 episodes marked as seen"}
-		//open connection
-		$url = 'http://api.trakt.tv/show/episode/seen/' . TRAKT_API_KEY;
-		$ch = curl_init();
-
-		$fields = array();
-		$fields['username'] = TRAKT_USERNAME;
-		$fields['password'] = TRAKT_PASSWORD;
-		$fields['title'] = $episodes[0]['info']->name;
-		$fields['year'] = $episodes[0]['info']->year;
-		$fields['episodes'] = $arrEpisodes;
-
-
-
-		//set the url, number of POST vars, POST data
-		curl_setopt($ch,CURLOPT_URL, $url);
-		curl_setopt($ch,CURLOPT_POST, 1);
-		curl_setopt($ch,CURLOPT_POSTFIELDS, json_encode($fields));
-		curl_setopt($ch,CURLOPT_RETURNTRANSFER, TRUE);
-
-		//execute post
-		$result = curl_exec($ch);
-		$result = json_decode($result);
-		curl_close($ch);
-
-
-		if(!$result->status || $result->status!='success') {
-			do_log("ERRO - " . $episodes[0]['info']->url);
-			do_log(print_r($url, true));
-			do_log(print_r($result, true));
-			do_log(print_r($fiedls, true));
-			do_log('----');
-			continue;
-		}
 
 		foreach($episodes as $episode) {
 			unset($fbData[$episode['idx']]);
@@ -237,4 +254,6 @@
 
 
 	do_log("Finalizado - " . date("d/m/Y H:i:s"));
+
+	unlink(PID);
 ?>
