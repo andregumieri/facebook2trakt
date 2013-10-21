@@ -1,5 +1,7 @@
 #!/usr/bin/php
 <?php
+	date_default_timezone_set('America/Sao_Paulo');
+	
 	define('PID', __DIR__.'/.pid');
 	define('PID_WAIT_TIME', 30);
 
@@ -13,8 +15,6 @@
 	file_put_contents(PID, mktime());
 
 
-
-	date_default_timezone_set('America/Sao_Paulo');
 	require('config.php');
 	require('libs/phpQuery-onefile.php');
 	$log = (defined('LOG_PATH') && trim(LOG_PATH)!='');
