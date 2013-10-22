@@ -200,12 +200,13 @@
 			$duration = intval($episode['info']->duration);
 			if($episodeNum<1 || $season<1) continue;
 
-			$arrEpisodes[] = array("season"=>$season, "episode"=>$episodeNum, "last_played"=>$episode['last_played']);
+			$arrEpisodes = array("season"=>$season, "episode"=>$episodeNum, "last_played"=>$episode['last_played']);
 
-			$url = 'http://api.trakt.tv/show/scrobble/' . TRAKT_API_KEY;
 
 			$ch = curl_init();
 
+			// SCROBBLE
+			/*$url = 'http://api.trakt.tv/show/scrobble/' . TRAKT_API_KEY;
 			$fields = array();
 			$fields['username'] = TRAKT_USERNAME;
 			$fields['password'] = TRAKT_PASSWORD;
@@ -217,7 +218,16 @@
 			$fields['progress'] = 100;
 			$fields['plugin_version'] = '0.1';
 			$fields['media_center_version'] = '0.1';
-			$fields['media_center_version'] = 'Oct 21 2013';
+			$fields['media_center_version'] = 'Oct 21 2013';*/
+
+			// SEEN
+			$url = 'http://api.trakt.tv/show/episode/seen/' . TRAKT_API_KEY;
+			$fields = array();
+			$fields['username'] = TRAKT_USERNAME;
+			$fields['password'] = TRAKT_PASSWORD;
+			$fields['title'] = $episodes[0]['info']->name;
+			$fields['year'] = $episodes[0]['info']->year;
+			$fields['episodes'] = $arrEpisodes;
 
 			//set the url, number of POST vars, POST data
 			curl_setopt($ch,CURLOPT_URL, $url);
