@@ -13,3 +13,4 @@ Uso
 3. Gere um Token do Facebook entrando na url configurada no item 1 `/autenticar.php`
 4. No console, execute `./scrobble.php`
 5. Adicione o `scrobble.php` no CRON ou Launch Agent.
+
